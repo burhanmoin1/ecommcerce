@@ -122,10 +122,12 @@ def BrandAccountLogin(request):
 
             # Return success message
             return JsonResponse({
-                'session_id': session_id,
-                'brandaccount': brandaccount,
-                'message': 'Login successful'
-            }, status=200)  # Status 200 for successful login
+            'session_id': session_id,
+            'message': 'Login successful',
+            'brand_account': {
+                'brand_name': brandaccount.brand_name,
+            }
+        }, status=200)
 
         else:
             return JsonResponse(

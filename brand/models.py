@@ -24,7 +24,7 @@ class BrandAccount(Document):
     is_verified = fields.BooleanField(default=False)
     login_time = fields.DateTimeField(blank=True)
     session_token = fields.StringField(blank=True)
-    brand_name = fields.ReferenceField(BrandForm, blank=False)
+    brand_name = fields.StringField(blank=True)
 
 class BrandAccountSession(Document):
     brandaccount = fields.ReferenceField(BrandAccount, blank=False)
