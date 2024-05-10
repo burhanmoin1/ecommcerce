@@ -13,23 +13,7 @@ from django.forms.models import model_to_dict
 import json
 from brand.models import *
 from rest_framework.views import APIView
-
-class IsSessionAuthenticated(BasePermission):
-    """Custom permission class to check if a session is authenticated."""
-
-    def has_permission(self, request, view):
-        # Extract session ID from the request data, headers, or another source
-        session_id = request.data.get('session_id')  # Example of session ID extraction from request data
-        # You can also extract from headers, cookies, etc.
-
-        if not session_id:
-            raise PermissionDenied('Session ID is required')  # Reject if no session ID is provided
-
-        # Check if the session ID exists in the UserSession model and is valid
-        if UserSession.objects.filter(session_id=session_id).exists():
-            return True  # Allow access if the session is authenticated
-
-        raise PermissionDenied('Session not authenticated')
+from django.contrib.auth.hashers import make_password
 
 @api_view(['POST'])
 def addsuperuser(request):
@@ -75,7 +59,7 @@ def loginsuperuser(request):
             # Log the superuser in
             login(request, superuser)
 
-            sessions = UserSession.objects.filter(superuser=superuser, is_active=True)
+            sessions = SuperUserSession.objects.filter(superuser=superuser, is_active=True)
 
             # If there are more than two active sessions, delete the oldest
             if sessions.count() > 1:
@@ -87,7 +71,7 @@ def loginsuperuser(request):
 
             session_id = str(uuid.uuid4())
 
-            user_session = UserSession(
+            user_session = SuperUserSession(
                 superuser=superuser,
                 session_id=session_id,
                 created_at=datetime.now(),
@@ -117,7 +101,7 @@ def adminsessionchecker(request):
         data = request.data
         session_id = data.get('session_id')
         
-        if UserSession.objects.filter(session_id=session_id).exists():
+        if SuperUserSession.objects.filter(session_id=session_id).exists():
             return JsonResponse({'message': 'Session authentiated'}, status=200)
 
         else:
@@ -129,43 +113,57 @@ def adminsessionchecker(request):
     return JsonResponse({'error': 'Method Not Allowed'}, status=405)
 
 
+@api_view(['GET'])
+def BrandFormView(request):
+    # Ensure this endpoint is for GET requests only
+    if request.method != 'GET':
+        return Response({'error': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-class BrandFormView(APIView):
-    """Class-based view to handle BrandForm with session authentication."""
-    
-    def get(self, request, brand_id=None):
-        if brand_id:
-            # Get a specific BrandForm by ID
-            try:
-                brand = BrandForm.objects.get(id=brand_id)
-                # Convert the BrandForm to a dictionary for the JSON response
-                serialized_data = {
-                    '_id': str(brand.id),
-                    'brand_name': brand.brand_name,
-                    'person_name': brand.person_name,
-                    'email': brand.email,
-                    'phone_number': brand.phone_number,
-                    'city': brand.city,
-                    'social_media_presence': brand.social_media_presence,
-                    'brands_business_operations': brand.brands_business_operations,
-                    'brands_product_category': brand.brands_product_category,
-                    'catalog_size': brand.catalog_size,
-                    'price_range': brand.price_range,
-                    'supply_chain': brand.supply_chain,
-                    'inventory': brand.inventory,
-                    'star_rating': brand.star_rating,
-                    'feedback_text': brand.feedback_text,
-                    'website': brand.website,
-                }
-                return Response(serialized_data, status=status.HTTP_200_OK)  # HTTP 200 OK
-            except BrandForm.DoesNotExist:
-                return Response({'error': 'Brand not found'}, status=status.HTTP_404_NOT_FOUND)  # HTTP 404
+    # Fetch session ID from query parameters or data
+    session_id = request.GET.get('session_id', request.data.get('session_id'))
 
-        else:
-            # Get all BrandForm instances
-            brands = BrandForm.objects.all()  # Retrieve all instances
-            # Convert the list to a dictionary
-            serialized_data = [
-                {**model_to_dict(brand), '_id': str(brand.id)} for brand in brands
-            ]
-            return Response(serialized_data, status=status.HTTP_200_OK) 
+    if not session_id:
+        return Response({'error': 'Session ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not SuperUserSession.objects.filter(session_id=session_id).exists():
+        return Response({'error': 'Session not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    brand_id = request.GET.get('brand_id', request.data.get('brand_id'))  # Fetch brand_id from query parameters
+
+    if brand_id:
+        # Get a specific BrandForm by ID
+        try:
+            brand = BrandForm.objects.get(id=brand_id)
+            # Convert the BrandForm to a dictionary for the JSON response
+            serialized_data = {
+                '_id': str(brand.id),
+                'brand_name': brand.brand_name,
+                'person_name': brand.person_name,
+                'email': brand.email,
+                'phone_number': brand.phone_number,
+                'city': brand.city,
+                'social_media_presence': brand.social_media_presence,
+                'brands_business_operations': brand.brands_business_operations,
+                'brands_product_category': brand.brands_product_category,
+                'catalog_size': brand.catalog_size,
+                'price_range': brand.price_range,
+                'supply_chain': brand.supply_chain,
+                'inventory': brand.inventory,
+                'star_rating': brand.star_rating,
+                'feedback_text': brand.feedback_text,
+                'website': brand.website,
+            }
+            return Response(serialized_data, status=status.HTTP_200_OK)
+        except BrandForm.DoesNotExist:
+            return Response({'error': 'Brand not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    else:
+        # Get all BrandForm instances
+        brands = BrandForm.objects.all()  # Retrieve all instances
+        # Convert the list to a dictionary
+        serialized_data = [
+            {**model_to_dict(brand), '_id': str(brand.id)} for brand in brands
+        ]
+        return Response(serialized_data, status=status.HTTP_200_OK)
+
+        

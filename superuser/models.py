@@ -10,7 +10,7 @@ class SuperUser(Document):
     login_time = fields.DateTimeField(blank=True)
     session_token = fields.StringField(blank=True)
 
-class UserSession(Document):
+class SuperUserSession(Document):
     superuser = fields.ReferenceField(SuperUser, blank=False)
     session_id = fields.StringField(unique=True) 
     created_at = fields.DateTimeField(default=datetime.now)
