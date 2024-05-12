@@ -14,4 +14,6 @@ urlpatterns = [
     path('BrandAccountLogin/', BrandAccountLogin, name='BrandAccountLogin'),
     path('brandaccount/', BrandFormView, name='BrandFormViewlist'),
     path('brandaccount/<str:brand_id>/', BrandFormView, name='BrandFormView'),
+    path('addprimarycategory/', AddPrimaryCategory.as_view(), name='addprimarycategory'),
+    path('addsecondarycategory/', AddSecondaryCategory.as_view(), name='addsecondarycategory'),
 ]

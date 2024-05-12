@@ -155,3 +155,28 @@ def brandaccountsessionchecker(request):
             )
         
     return JsonResponse({'error': 'Method Not Allowed'}, status=405)
+
+
+class ProductVariationImageView(APIView):
+    def post(self, request, *args, **kwargs):
+        # Get data from request
+        product_variation_id = request.data.get('product_variation_id')
+        image = request.data.get('image')
+
+        # Check if required fields are present
+        if not product_variation_id or not image:
+            return Response({'error': 'product_variation_id and image are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Get the ProductVariation instance
+            product_variation = ProductVariation.objects.get(id=product_variation_id)
+        except ProductVariation.DoesNotExist:
+            return Response({'error': 'ProductVariation not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Save the image to the productvariation/{generate.sku} directory
+        try:
+            ProductVariationImage.objects.create(product_variation=product_variation, image=image)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'message': 'Image uploaded successfully'}, status=status.HTTP_201_CREATED)

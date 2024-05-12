@@ -166,4 +166,60 @@ def BrandFormView(request):
         ]
         return Response(serialized_data, status=status.HTTP_200_OK)
 
-        
+class AddPrimaryCategory(APIView):
+    def get(self, request, *args, **kwargs):
+        primary_categories = PrimaryCategory.objects.all()
+        serialized_data = [
+            {
+                'id': str(primary.id),  # Convert ObjectId to string
+                'name': primary.name,
+                # Add any other fields you need
+            }
+            for primary in primary_categories
+        ]
+        return Response(serialized_data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        primary_category_name = request.data.get("name")
+        primary_category_description = request.data.get("description")
+        if not primary_category_name or not primary_category_description:
+            return Response({'error': 'Name and description are required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Check if the primary category already exists
+            if PrimaryCategory.objects.filter(name=primary_category_name).exists():
+                return Response({'error': 'Primary category already exists'}, status=status.HTTP_409_CONFLICT)
+
+            # Create the primary category
+            primary_category = PrimaryCategory(name=primary_category_name, description=primary_category_description)
+            primary_category.save()
+
+            return Response({'message': 'Primary category added successfully'}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AddSecondaryCategory(APIView):
+    def post(self, request, *args, **kwargs):
+        secondary_category_name = request.data.get("name")
+        secondary_category_description = request.data.get("description")
+        parent_category_id = request.data.get("parent_category_id")
+
+        if not secondary_category_name or not secondary_category_description or not parent_category_id:
+            return Response({'error': 'Name, description, and parent category ID are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Check if the parent category exists
+            parent_category = PrimaryCategory.objects.get(id=parent_category_id)
+
+            # Check if the secondary category already exists
+            if SecondaryCategory.objects.filter(name=secondary_category_name, parent_category=parent_category).exists():
+                return Response({'error': 'Secondary category already exists for the parent category'}, status=status.HTTP_409_CONFLICT)
+
+            # Create the secondary category
+            secondary_category = SecondaryCategory(name=secondary_category_name, description=secondary_category_description, parent_category=parent_category)
+            secondary_category.save()
+
+            return Response({'message': 'Secondary category added successfully'}, status=status.HTTP_201_CREATED)
+        except PrimaryCategory.DoesNotExist:
+            return Response({'error': 'Parent category does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
