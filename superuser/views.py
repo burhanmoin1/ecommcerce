@@ -210,10 +210,6 @@ class AddSecondaryCategory(APIView):
             # Check if the parent category exists
             parent_category = PrimaryCategory.objects.get(id=parent_category_id)
 
-            # Check if the secondary category already exists
-            if SecondaryCategory.objects.filter(name=secondary_category_name, parent_category=parent_category).exists():
-                return Response({'error': 'Secondary category already exists for the parent category'}, status=status.HTTP_409_CONFLICT)
-
             # Create the secondary category
             secondary_category = SecondaryCategory(name=secondary_category_name, description=secondary_category_description, parent_category=parent_category)
             secondary_category.save()
@@ -223,3 +219,4 @@ class AddSecondaryCategory(APIView):
             return Response({'error': 'Parent category does not exist'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

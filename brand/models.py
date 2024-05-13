@@ -39,7 +39,7 @@ class PrimaryCategory(Document):
     description = fields.StringField(blank=False)
 
 class SecondaryCategory(Document):
-    name = fields.StringField(blank=False, unique=True)
+    name = fields.StringField(blank=False)
     description = fields.StringField(blank=False)
     parent_category = fields.ReferenceField(PrimaryCategory, blank=False)
 
