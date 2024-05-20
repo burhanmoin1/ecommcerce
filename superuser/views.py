@@ -198,6 +198,18 @@ class AddPrimaryCategory(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AddSecondaryCategory(APIView):
+    def get(self, request, *args, **kwargs):
+        secondary_categories = SecondaryCategory.objects.all()
+        serialized_data = [
+            {
+                'id': str(secondary.id),  # Convert ObjectId to string
+                'name': secondary.name,
+                # Add any other fields you need
+            }
+            for secondary in secondary_categories
+        ]
+        return Response(serialized_data, status=status.HTTP_200_OK)
+        
     def post(self, request, *args, **kwargs):
         secondary_category_name = request.data.get("name")
         secondary_category_description = request.data.get("description")

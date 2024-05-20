@@ -16,4 +16,6 @@ urlpatterns = [
     path('brandaccount/<str:brand_id>/', BrandFormView, name='BrandFormView'),
     path('addprimarycategory/', AddPrimaryCategory.as_view(), name='addprimarycategory'),
     path('addsecondarycategory/', AddSecondaryCategory.as_view(), name='addsecondarycategory'),
+    path('get_secondary_categories/', get_secondary_categories, name='get_secondary_categories'),
+    path('brandproductsfordashboard/', BrandProductsforDashboard.as_view(), name='brandproductsfordashboard'),
 ]

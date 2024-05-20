@@ -52,11 +52,11 @@ class ProductSizes(Document):
 class Product(Document):
     name = fields.StringField(blank=False, unique=True)
     description = fields.StringField(blank=False)
-    sku: fields.StringField(blank=False, unique=True)
+    sku = fields.StringField(blank=False, unique=True)
     primary_category = fields.ReferenceField(PrimaryCategory, blank=False)
     secondary_category = fields.ReferenceField(SecondaryCategory, blank=False)
-    brand_name = fields.ReferenceField(BrandAccount, blank=False)
-    price = fields.DecimalField(blank=False)
+    brand_account = fields.ReferenceField(BrandAccount, blank=False)
+    price = fields.StringField(blank=False)
 
 class ProductVariation(Document):
     product = fields.ReferenceField(Product, blank=False)
@@ -75,7 +75,7 @@ class ProductVariation(Document):
         return f"{self.product.sku}-{self.color}"
 
 class ProductVariationImage(Document):
-    product_variation = fields.ReferenceField(ProductVariation, related_name='productvariationimages')
+    product_variation = fields.ReferenceField(ProductVariation, blank=False, related_name='productvariationimages')
     image = fields.ImageField()
 
     def generate_sku(self):

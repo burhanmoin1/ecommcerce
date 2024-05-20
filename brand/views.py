@@ -126,6 +126,7 @@ def BrandAccountLogin(request):
             'message': 'Login successful',
             'brand_account': {
                 'brand_name': brandaccount.brand_name,
+                'id': str(brandaccount.id)
             }
         }, status=200)
 
@@ -157,9 +158,81 @@ def brandaccountsessionchecker(request):
     return JsonResponse({'error': 'Method Not Allowed'}, status=405)
 
 
+class BrandProductsforDashboard(APIView):
+    def get(self, request, brand_name, *args, **kwargs):
+        # Assuming BrandAccount model is defined somewhere
+        
+        # Fetch the BrandAccount object based on the provided brand_name
+        try:
+            brand_account = BrandAccount.objects.get(name=brand_name)
+        except BrandAccount.DoesNotExist:
+            return Response({"error": "Brand not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Fetch all products associated with the brand
+        products = Product.objects.filter(brand_name=brand_account)
+        
+        # Serialize product data
+        serialized_data = [
+            {
+                'name': product.name,
+                'description': product.description,
+                'sku': product.sku,
+                'primary_category': str(product.primary_category.id),
+                'secondary_category': str(product.secondary_category.id),
+                'brand_name': str(product.brand_name.id),
+                'price': str(product.price),
+            }
+            for product in products
+        ]
+        
+        return Response(serialized_data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        # Assuming the request data contains the necessary information for creating a product
+        data = request.data
+        try:
+            # Assuming brand_name is provided in the request data
+            product = Product(
+                name=data('name'),
+                description=data('description'),
+                sku=data('sku'),
+                primary_category=data('primary_category'),
+                secondary_category=data('secondary_category'),
+                brand_account=data('brand_name'),
+                price=data('price')
+            )
+
+            product.save()
+            return Response({"message": "Product created successfully"}, status=status.HTTP_201_CREATED)
+        except KeyError as e:
+            return Response({"error": f"Missing required field: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def get_secondary_categories(request):
+    if request.method == 'GET':
+        primary_category_name = request.GET.get('primary_category_name')
+
+        try:
+            primary_category = PrimaryCategory.objects.get(name=primary_category_name)
+            secondary_categories = SecondaryCategory.objects.filter(parent_category=primary_category)
+
+            secondary_categories_data = [{
+                'id': str(category.id),
+                'name': category.name,
+                'description': category.description
+            } for category in secondary_categories]
+
+            return JsonResponse({'secondary_categories': secondary_categories_data})
+        except PrimaryCategory.DoesNotExist:
+            return JsonResponse({'error': 'Primary category does not exist'}, status=404)
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
 class ProductVariationImageView(APIView):
     def post(self, request, *args, **kwargs):
-        # Get data from request
+        
         product_variation_id = request.data.get('product_variation_id')
         image = request.data.get('image')
 
