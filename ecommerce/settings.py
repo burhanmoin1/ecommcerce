@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'brand',
     'superuser',
     'rest_framework',
+    'rest_framework_mongoengine',
 ]
 
 CORS_ALLOWED_ORIGINS = [

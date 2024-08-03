@@ -18,4 +18,5 @@ urlpatterns = [
     path('addsecondarycategory/', AddSecondaryCategory.as_view(), name='addsecondarycategory'),
     path('get_secondary_categories/', get_secondary_categories, name='get_secondary_categories'),
     path('brandproductsfordashboard/', BrandProductsforDashboard.as_view(), name='brandproductsfordashboard'),
+    path('api/superusers/', SuperUserCreateView.as_view(), name='superuser-create'),
 ]

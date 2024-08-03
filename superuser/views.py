@@ -14,6 +14,27 @@ import json
 from brand.models import *
 from rest_framework.views import APIView
 from django.contrib.auth.hashers import make_password
+from rest_framework_mongoengine import generics
+from .models import SuperUser
+from .serializers import SuperUserSerializer
+
+class SuperUserCreateView(generics.CreateAPIView):
+    queryset = SuperUser.objects.all()
+    serializer_class = SuperUserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                self.perform_create(serializer)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        serializer.save()
 
 @api_view(['POST'])
 def addsuperuser(request):

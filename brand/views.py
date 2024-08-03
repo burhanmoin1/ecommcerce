@@ -157,7 +157,6 @@ def brandaccountsessionchecker(request):
         
     return JsonResponse({'error': 'Method Not Allowed'}, status=405)
 
-
 class BrandProductsforDashboard(APIView):
     def get(self, request, brand_name, *args, **kwargs):
         # Assuming BrandAccount model is defined somewhere
